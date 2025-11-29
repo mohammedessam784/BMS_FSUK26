@@ -28,7 +28,9 @@ extern UART_HandleTypeDef huart2; //huart2 is used only for debugging
 
 // Global variables (adjust sizes as needed)
 uint8_t response_frame2[(MAXBYTES+6)*TOTALBOARDS];
- uint8_t fullBuffer[(MAXBYTES+6)*TOTALBOARDS];
+BYTE autoaddr_response_frame[(1+6)*TOTALBOARDS]; //response frame for auto-addressing sequence
+
+uint8_t fullBuffer[(MAXBYTES+6)*TOTALBOARDS];
 uint8_t fault_frame[39*TOTALBOARDS];
 int currentBoard = 0;
 int currentCell = 0;
@@ -134,6 +136,31 @@ void Wake79616(void)
     HAL_UART_Init(&huart1);
 }
 
+void Wake79600(void)
+{
+    HAL_UART_DeInit(&huart1);
+    
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    __HAL_RCC_GPIOA_CLK_ENABLE();   // Make sure the clock is enabled for GPIOA
+    
+    // Configure PA9 (UART TX) as a push-pull output.
+    GPIO_InitStruct.Pin = GPIO_PIN_9;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+		
+	//HAL_Delay(1000);
+		
+    // Drive TX low
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+   
+    HAL_Delay(3); // WAKE ping = 2.5ms to 3ms
+
+    // Reinitialize UART (this call should reconfigure PA9 to its alternate function)
+    HAL_UART_Init(&huart1);
+}
+
 void SD79616(void)
 {
     HAL_UART_DeInit(&huart1);
@@ -193,7 +220,7 @@ void HWRST79616(void)
     HAL_UART_Init(&huart1);
 }
 
-// auto addressing sequence for daisy chain
+// auto addressing sequence for daisy chain **NO BRIDGE**
 void AutoAddress(void)
 {
     //DUMMY WRITE TO SNCHRONIZE ALL DAISY CHAIN DEVICES DLL (IF A DEVICE RESET OCCURED PRIOR TO THIS)
@@ -254,7 +281,61 @@ void AutoAddress(void)
     return;
 }
 
+// auto addressing sequence for daisy chain **WITH BRIDGE**
+void Bridge_AutoAddress(void)
+{
+    //DUMMY WRITE TO SNCHRONIZE ALL DAISY CHAIN DEVICES DLL (IF A DEVICE RESET OCCURED PRIOR TO THIS)
+    writeReg(0, OTP_ECC_DATAIN1, 0X00, 1, FRMWRT_ALL_W);
+    writeReg(0, OTP_ECC_DATAIN2, 0X00, 1, FRMWRT_ALL_W);
+    writeReg(0, OTP_ECC_DATAIN3, 0X00, 1, FRMWRT_ALL_W);
+    writeReg(0, OTP_ECC_DATAIN4, 0X00, 1, FRMWRT_ALL_W);
+    writeReg(0, OTP_ECC_DATAIN5, 0X00, 1, FRMWRT_ALL_W);
+    writeReg(0, OTP_ECC_DATAIN6, 0X00, 1, FRMWRT_ALL_W);
+    writeReg(0, OTP_ECC_DATAIN7, 0X00, 1, FRMWRT_ALL_W);
+    writeReg(0, OTP_ECC_DATAIN8, 0X00, 1, FRMWRT_ALL_W);
+	
+		//writeReg(0, OTP_ECC_DATAIN9, 0X00, 1, FRMWRT_ALL_W);
+    //writeReg(0, OTP_ECC_TEST, 0X00, 1, FRMWRT_ALL_W);
+    
+	//ENABLE AUTO ADDRESSING MODE
+    writeReg(0, BQ79616_CONTROL1, 0X01, 1, FRMWRT_ALL_W);
 
+    //SET ADDRESSES FOR EVERY BOARD
+    for(currentBoard=0; currentBoard<TOTALBOARDS; currentBoard++)
+    {
+        writeReg(0, BQ79616_DIR0_ADDR, currentBoard, 1, FRMWRT_ALL_W);
+    }
+
+    //BROADCAST WRITE TO SET ALL DEVICES AS STACK DEVICE
+    writeReg(0, BQ79616_COMM_CTRL, 0x02, 1, FRMWRT_ALL_W);
+
+    //SET THE HIGHEST DEVICE IN THE STACK AS BOTH STACK AND TOP OF STACK
+    writeReg(TOTALBOARDS-1, BQ79616_COMM_CTRL, 0x03, 1, FRMWRT_SGL_W);
+
+
+    //SYNCRHONIZE THE DLL WITH A THROW-AWAY READ
+    readReg(0, OTP_ECC_DATAIN1, autoaddr_response_frame, 1, 0, FRMWRT_STK_R);
+    readReg(0, OTP_ECC_DATAIN2, autoaddr_response_frame, 1, 0, FRMWRT_STK_R);
+    readReg(0, OTP_ECC_DATAIN3, autoaddr_response_frame, 1, 0, FRMWRT_STK_R);
+    readReg(0, OTP_ECC_DATAIN4, autoaddr_response_frame, 1, 0, FRMWRT_STK_R);
+    readReg(0, OTP_ECC_DATAIN5, autoaddr_response_frame, 1, 0, FRMWRT_STK_R);
+    readReg(0, OTP_ECC_DATAIN6, autoaddr_response_frame, 1, 0, FRMWRT_STK_R);
+    readReg(0, OTP_ECC_DATAIN7, autoaddr_response_frame, 1, 0, FRMWRT_STK_R);
+    readReg(0, OTP_ECC_DATAIN8, autoaddr_response_frame, 1, 0, FRMWRT_STK_R);
+
+		
+    //OPTIONAL: read back all device addresses
+    for(currentBoard=0; currentBoard<TOTALBOARDS; currentBoard++)
+    {
+        readReg(currentBoard, BQ79616_DIR0_ADDR, response_frame2, 1, 0, FRMWRT_SGL_R);
+        
+    }
+
+    //OPTIONAL: read register address 0x2001 and verify that the value is 0x14
+    ReadReg(0, 0x2001, autoaddr_response_frame, 1, 0, FRMWRT_SGL_R);
+
+    return;
+}
 
 //Auto Addressing sequence for Ring Configuration
 void AutoAddress_Ring(void)
