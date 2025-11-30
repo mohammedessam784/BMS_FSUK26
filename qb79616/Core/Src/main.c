@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bq79616.h"
+#include "bq79600.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -242,11 +243,14 @@ int main(void)
 //   test1();
 //   test1();
 //   test1();
-   Wake79616();
-   AutoAddress();
-   test1();
+  // Wake79616();
+
+   Wake79600();
+  // AutoAddress();
+   Bridge_AutoAddress();
+   //test1();
   	 // test4();
-   writeReg(0, BQ79616_ADC_CTRL1, 0x06, 1, FRMWRT_ALL_W);
+  // writeReg(0, BQ79616_ADC_CTRL1, 0x06, 1, FRMWRT_ALL_W);
 
   /* USER CODE END 2 */
 

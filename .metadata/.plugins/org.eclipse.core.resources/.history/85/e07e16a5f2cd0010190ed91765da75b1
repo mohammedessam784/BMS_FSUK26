@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bq79616.h"
+#include "bq79600.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -95,18 +96,21 @@ void test1(){ //success!!!
 }
 /** Test Case 2: Voltage Reading **/
 int totalV = 0;
+float final_value;
 int cellVoltages_board0[16] = {0};
 int cellVoltages_board1[16] = {0};
-void test2(){ //success!!!
-	 totalV = 0;
-
+float test2(){ //success!!!
+	int totalV1 = 0;
+	int totalV2 = 0;
     uint8_t boardNum = 0;
     uint8_t activeCells = 16;
-    writeFrame(0, BQ79616_ADC_CTRL1, 0x05, 1, FRMWRT_ALL_W);
-    readBoardVoltages(boardNum, activeCells, &totalV, cellVoltages_board0);
+   // writeReg(0, BQ79616_ADC_CTRL1, 0x06, 1, FRMWRT_ALL_W);
+    readBoardVoltages(boardNum, activeCells, &totalV1, cellVoltages_board0);
 
     HAL_Delay(100);
-    readBoardVoltages(1, activeCells, &totalV, cellVoltages_board1);
+    readBoardVoltages(1, activeCells, &totalV2, cellVoltages_board1);
+    totalV=totalV1 + totalV2;
+    return ((totalV1 + totalV2)*0.00019073);
     /** If this works modify to read more than one board **/
 }
 /** Test Case 3: Configurations Needed for fault detection **/
@@ -239,10 +243,12 @@ int main(void)
 //   test1();
 //   test1();
 //   test1();
-   Wake79616();
-   AutoAddress();
-   test1();
+   Wake79600();
+  // AutoAddress();
+   Bridge_AutoAddress();
+   //test1();
   	 // test4();
+  // writeReg(0, BQ79616_ADC_CTRL1, 0x06, 1, FRMWRT_ALL_W);
 
   /* USER CODE END 2 */
 
@@ -250,8 +256,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  totalV = 0;
-	  test2();
+	  final_value = test2();
 	  HAL_Delay(30);
     /* USER CODE END WHILE */
 

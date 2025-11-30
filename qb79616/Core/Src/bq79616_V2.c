@@ -21,14 +21,14 @@
 #include "stm32f1xx_hal.h"    
 #include <string.h>
 #include "bq79616.h"          // BQ79616 definitions and macros
-
+#include "bq79600.h"
 // External UART handle (assumed to be defined and initialized in main.c)
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2; //huart2 is used only for debugging
 
 // Global variables (adjust sizes as needed)
 uint8_t response_frame2[(MAXBYTES+6)*TOTALBOARDS];
-BYTE autoaddr_response_frame[(1+6)*TOTALBOARDS]; //response frame for auto-addressing sequence
+unsigned char autoaddr_response_frame[(1+6)*TOTALBOARDS]; //response frame for auto-addressing sequence
 
 uint8_t fullBuffer[(MAXBYTES+6)*TOTALBOARDS];
 uint8_t fault_frame[39*TOTALBOARDS];
@@ -156,6 +156,23 @@ void Wake79600(void)
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
    
     HAL_Delay(3); // WAKE ping = 2.5ms to 3ms
+
+//    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+//
+//    HAL_Delay(1000);
+//
+//    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+//
+//	HAL_Delay(4); // WAKE ping = 2.5ms to 3ms
+//
+//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+//
+//	HAL_Delay(1000);
+//
+//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+//
+//	HAL_Delay(5); // WAKE ping = 2.5ms to 3ms
+
 
     // Reinitialize UART (this call should reconfigure PA9 to its alternate function)
     HAL_UART_Init(&huart1);
@@ -332,7 +349,7 @@ void Bridge_AutoAddress(void)
     }
 
     //OPTIONAL: read register address 0x2001 and verify that the value is 0x14
-    ReadReg(0, 0x2001, autoaddr_response_frame, 1, 0, FRMWRT_SGL_R);
+    readReg(0, 0x2001, autoaddr_response_frame, 1, 0, FRMWRT_SGL_R);
 
     return;
 }

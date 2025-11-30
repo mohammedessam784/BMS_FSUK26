@@ -18,8 +18,6 @@
 #ifndef BQ79600_H_
 #define BQ79600_H_
 
-#include "datatypes.h"
-#include "hal_stdtypes.h"
 
 //BQ79600-Q1 REGISTER DEFINES
 #define Bridge_DIAG_CTRL               0x2000
@@ -63,6 +61,6 @@
 void Wake79600(void);
 void SD79600(void);
 void StA79600(void);
-
+void Bridge_AutoAddress(void);
 #endif /* BQ79600_H_ */
 //EOF
