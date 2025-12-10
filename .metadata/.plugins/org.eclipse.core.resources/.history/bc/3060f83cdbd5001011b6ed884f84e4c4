@@ -246,11 +246,17 @@ int main(void)
   // Wake79616();
 
    Wake79600();
-   Bridge_AutoAddress();
 
 //   writeReg(0, BQ79616_CONTROL1, 0x21, 1, FRMWRT_ALL_W);
 //  readReg(0, Bridge_SLP_TIMEOUT, &received_data, 1, 100, FRMWRT_SGL_R);
+  HAL_Delay(100);
+ // AutoAddress();
 
+Bridge_AutoAddress();
+HAL_Delay(10);
+// AutoAddress();
+
+Bridge_AutoAddress();
 //SYNCRHONIZE THE DLL WITH A THROW-AWAY READ
    readReg(0, OTP_ECC_DATAIN1, &received_data, 1, 0, FRMWRT_STK_R);
    readReg(0, OTP_ECC_DATAIN2, &received_data, 1, 0, FRMWRT_STK_R);
