@@ -1,52 +1,10 @@
-16:51:15 **** Incremental Build of configuration Debug for project qb79616 ****
+16:11:16 **** Incremental Build of configuration Debug for project qb79616 ****
 make -j4 all 
-arm-none-eabi-gcc "../Core/Src/bq79616_V2.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/bq79616_V2.d" -MT"Core/Src/bq79616_V2.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/bq79616_V2.o"
-../Core/Src/bq79616_V2.c: In function 'check_cell_balancing':
-../Core/Src/bq79616_V2.c:686:13: warning: unused variable 'balance_mask' [-Wunused-variable]
-  686 |     uint8_t balance_mask = 0x00;  // Bitmask for which cells to balance
-      |             ^~~~~~~~~~~~
-../Core/Src/bq79616_V2.c:685:28: warning: unused variable 'min_voltage' [-Wunused-variable]
-  685 |     float max_voltage = 0, min_voltage = 100;
-      |                            ^~~~~~~~~~~
-../Core/Src/bq79616_V2.c:685:11: warning: unused variable 'max_voltage' [-Wunused-variable]
-  685 |     float max_voltage = 0, min_voltage = 100;
-      |           ^~~~~~~~~~~
-../Core/Src/bq79616_V2.c:684:15: warning: unused variable 'voltages' [-Wunused-variable]
-  684 |         float voltages[16];
-      |               ^~~~~~~~
-../Core/Src/bq79616_V2.c: In function 'nfault_enable':
-../Core/Src/bq79616_V2.c:752:17: warning: unused variable 'rstVal' [-Wunused-variable]
-  752 |         uint8_t rstVal = 0x54;
-      |                 ^~~~~~
-../Core/Src/bq79616_V2.c: In function 'configure_OTUT':
-../Core/Src/bq79616_V2.c:792:17: warning: unused variable 'gpioConf' [-Wunused-variable]
-  792 |         uint8_t gpioConf= 0x09; //for simplicity enable all gpio thermistors
-      |                 ^~~~~~~~
-../Core/Src/bq79616_V2.c: In function 'readCellVoltages':
-../Core/Src/bq79616_V2.c:839:18: warning: unused variable 'loRegAddr' [-Wunused-variable]
-  839 |         uint16_t loRegAddr = hiRegAddr + 1;
-      |                  ^~~~~~~~~
-../Core/Src/bq79616_V2.c:835:13: warning: unused variable 'full_cell_voltage' [-Wunused-variable]
-  835 |     uint8_t full_cell_voltage[2];
-      |             ^~~~~~~~~~~~~~~~~
-../Core/Src/bq79616_V2.c:828:21: warning: variable 'cellVoltages' set but not used [-Wunused-but-set-variable]
-  828 |                 int cellVoltages[16] = {0}; // Index 0 = Cell16, index 15 = Cell1
-      |                     ^~~~~~~~~~~~
-../Core/Src/bq79616_V2.c: In function 'readBoardVoltages':
-../Core/Src/bq79616_V2.c:885:18: warning: unused variable 'loRegAddr' [-Wunused-variable]
-  885 |         uint16_t loRegAddr = hiRegAddr + 1;
-      |                  ^~~~~~~~~
-arm-none-eabi-gcc -o "qb79616.elf" @"objects.list"   -mcpu=cortex-m3 -T"F:\MOHAMMED ESSAM\Low Voltage S2\BMS\qb79616_projects\qb79616\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="qb79616.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: qb79616.elf
- 
 arm-none-eabi-size  qb79616.elf 
-arm-none-eabi-objdump -h -S qb79616.elf  > "qb79616.list"
    text	   data	    bss	    dec	    hex	filename
-  15152	     12	   2108	  17272	   4378	qb79616.elf
+  15020	     12	   2196	  17228	   434c	qb79616.elf
 Finished building: default.size.stdout
  
-Finished building: qb79616.list
- 
 
-16:51:23 Build Finished. 0 errors, 10 warnings. (took 7s.249ms)
+16:11:16 Build Finished. 0 errors, 0 warnings. (took 480ms)
 

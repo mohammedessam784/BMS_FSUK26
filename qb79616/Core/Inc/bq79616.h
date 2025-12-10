@@ -5,7 +5,7 @@
      User defined parameters
    ------------------------------------
 */
-#define TOTALBOARDS 2       //boards in stack
+#define TOTALBOARDS 3       //boards in stack
 #define MAXBYTES (16*2)     //maximum number of bytes to be read from the devices (for array creation)
 #define BAUDRATE 1000000    //device + uC baudrate
 
