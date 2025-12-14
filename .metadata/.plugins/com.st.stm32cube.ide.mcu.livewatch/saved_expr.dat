@@ -6,3 +6,6 @@ response_frame2
 currentBoard
 received_data
 autoaddr_response_frame
+response_frame2
+adc1
+adc2

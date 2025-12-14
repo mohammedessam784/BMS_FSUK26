@@ -45,7 +45,7 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+uint8_t received_data = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,13 +102,13 @@ int cellVoltages_board1[16] = {0};
 float test2(){ //success!!!
 	int totalV1 = 0;
 	int totalV2 = 0;
-    uint8_t boardNum = 0;
+
     uint8_t activeCells = 16;
    // writeReg(0, BQ79616_ADC_CTRL1, 0x06, 1, FRMWRT_ALL_W);
-    readBoardVoltages(boardNum, activeCells, &totalV1, cellVoltages_board0);
+    readBoardVoltages(1, activeCells, &totalV1, cellVoltages_board0);
 
     HAL_Delay(100);
-    readBoardVoltages(1, activeCells, &totalV2, cellVoltages_board1);
+    readBoardVoltages(2, activeCells, &totalV2, cellVoltages_board1);
     totalV=totalV1 + totalV2;
     return ((totalV1 + totalV2)*0.00019073);
     /** If this works modify to read more than one board **/
@@ -246,20 +246,36 @@ int main(void)
   // Wake79616();
 
    Wake79600();
-  // AutoAddress();
-  // Bridge_AutoAddress();
-   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-   HAL_Delay(1000);
-   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+   writeReg(0, BQ79616_CONTROL1, 0x20, 1, FRMWRT_ALL_W);
+   Bridge_AutoAddress();
 
-      HAL_Delay(100);
+//   writeReg(0, BQ79616_CONTROL1, 0x21, 1, FRMWRT_ALL_W);
+//  readReg(0, Bridge_SLP_TIMEOUT, &received_data, 1, 100, FRMWRT_SGL_R);
 
-     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-     HAL_Delay(1000);
+//SYNCRHONIZE THE DLL WITH A THROW-AWAY READ
+   readReg(0, OTP_ECC_DATAIN1, &received_data, 1, 0, FRMWRT_STK_R);
+   readReg(0, OTP_ECC_DATAIN2, &received_data, 1, 0, FRMWRT_STK_R);
+   readReg(0, OTP_ECC_DATAIN3, &received_data, 1, 0, FRMWRT_STK_R);
+   readReg(0, OTP_ECC_DATAIN4, &received_data, 1, 0, FRMWRT_STK_R);
+   readReg(0, OTP_ECC_DATAIN5, &received_data, 1, 0, FRMWRT_STK_R);
+   readReg(0, OTP_ECC_DATAIN6, &received_data, 1, 0, FRMWRT_STK_R);
+   readReg(0, OTP_ECC_DATAIN7, &received_data, 1, 0, FRMWRT_STK_R);
+   readReg(0, OTP_ECC_DATAIN8, &received_data, 1, 0, FRMWRT_STK_R);
+   //writeReg(0, BQ79616_CONTROL1, received_data | (1 << 5), 1,  FRMWRT_SGL_W);
+ //AutoAddress();
+   // Bridge_AutoAddress();
+//   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+//   HAL_Delay(1000);
+//   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+//
+//      HAL_Delay(100);
+//
+//     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+//     HAL_Delay(1000);
 
    //test1();
   	 // test4();
-  // writeReg(0, BQ79616_ADC_CTRL1, 0x06, 1, FRMWRT_ALL_W);
+   writeReg(0, BQ79616_ADC_CTRL1, 0x06, 1, FRMWRT_STK_W);
 
   /* USER CODE END 2 */
 
@@ -267,8 +283,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//	  final_value = test2();
-//	  HAL_Delay(30);
+	  final_value = test2();
+	  HAL_Delay(30);
+	   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+	   HAL_Delay(1000);
+	   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+	   HAL_Delay(1000);
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
