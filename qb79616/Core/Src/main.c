@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -41,11 +41,14 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint8_t received_data = 0;
+uint8_t received_data1 = 0;
+uint8_t received_data2 = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -53,6 +56,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 /* Receive buffer (1 byte) */
 //uint8_t rx_byte[5];
@@ -87,11 +91,11 @@ static void MX_USART2_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void test1(){ //success!!!
-    Wake79616();
+	Wake79616();
 
-    HAL_Delay(2);
+	HAL_Delay(2);
 
-    AutoAddress();
+	AutoAddress();
 
 }
 /** Test Case 2: Voltage Reading **/
@@ -103,101 +107,215 @@ float test2(){ //success!!!
 	int totalV1 = 0;
 	int totalV2 = 0;
 
-    uint8_t activeCells = 16;
-   // writeReg(0, BQ79616_ADC_CTRL1, 0x06, 1, FRMWRT_ALL_W);
-    readBoardVoltages(1, activeCells, &totalV1, cellVoltages_board0);
+	uint8_t activeCells = 16;
+	// writeReg(0, BQ79616_ADC_CTRL1, 0x06, 1, FRMWRT_ALL_W);
+	readBoardVoltages(1, activeCells, &totalV1, cellVoltages_board0);
 
-    HAL_Delay(100);
-    readBoardVoltages(2, activeCells, &totalV2, cellVoltages_board1);
-    totalV=totalV1 + totalV2;
-    return ((totalV1 + totalV2)*0.00019073);
-    /** If this works modify to read more than one board **/
+	HAL_Delay(100);
+	readBoardVoltages(2, activeCells, &totalV2, cellVoltages_board1);
+	totalV=totalV1 + totalV2;
+	return ((totalV1 + totalV2)*0.00019073);
+	/** If this works modify to read more than one board **/
 }
 /** Test Case 3: Configurations Needed for fault detection **/
 void test3(){ //success!!!
 
-    //enable temp protector using 1 gpio thermistor
-    //remember to set vcb done to vuv
-    uint8_t status_OTUT = configure_OTUT(0, 1);
+	//enable temp protector using 1 gpio thermistor
+	//remember to set vcb done to vuv
+	uint8_t status_OTUT = configure_OTUT(0, 1);
 
-    HAL_UART_Transmit(&huart2, &status_OTUT, sizeof(status_OTUT), 100);
-    HAL_Delay(50);
+	HAL_UART_Transmit(&huart2, &status_OTUT, sizeof(status_OTUT), 100);
+	HAL_Delay(50);
 
-    //enable voltage protector for board 0 all 16 cells
-    uint8_t status_OVUV = configure_OVUV(0, 16);
+	//enable voltage protector for board 0 all 16 cells
+	uint8_t status_OVUV = configure_OVUV(0, 16);
 
-    HAL_UART_Transmit(&huart2, &status_OVUV, sizeof(status_OVUV), 100);
+	HAL_UART_Transmit(&huart2, &status_OVUV, sizeof(status_OVUV), 100);
 
-    /** expected: undervoltage fault **/
-    //further testing fault interrupt test
+	/** expected: undervoltage fault **/
+	//further testing fault interrupt test
 }
 
 int comm_x = 0;
 void test4()
 {
-  uint8_t fault_array[TOTALBOARDS] = {0};
-  uint8_t msg_received = 0;
-  uint8_t read_reg = 0;
-  Wake79616();
+	uint8_t fault_array[TOTALBOARDS] = {0};
+	uint8_t msg_received = 0;
+	uint8_t read_reg = 0;
+	Wake79616();
 
-    HAL_Delay(2);
+	HAL_Delay(2);
 
-    AutoAddress_Ring();
+	AutoAddress_Ring();
 
-    //Time for physically removing the cable between 2 EVMs
-//    HAL_Delay(3000);
+	//Time for physically removing the cable between 2 EVMs
+	//    HAL_Delay(3000);
 
-    //Reset all faults
-    ResetAllFaults(0, FRMWRT_ALL_W);
+	//Reset all faults
+	ResetAllFaults(0, FRMWRT_ALL_W);
 
-    //Read for communication Error
-  for(int i = 0; i < TOTALBOARDS; i++)
-  {
-    if(readReg(i, FAULT_RST2, fault_array + i, 1, 200, FRMWRT_SGL_R) !=0)
-    {
-      msg_received++;
-    }
-    fault_array[i] = fault_array[i] & 0x1F;
+	//Read for communication Error
+	for(int i = 0; i < TOTALBOARDS; i++)
+	{
+		if(readReg(i, FAULT_RST2, fault_array + i, 1, 200, FRMWRT_SGL_R) !=0)
+		{
+			msg_received++;
+		}
+		fault_array[i] = fault_array[i] & 0x1F;
 
-    if(fault_array[i] != 0)
-      break;
-  }
+		if(fault_array[i] != 0)
+			break;
+	}
 
-  //Communication error
-  if(msg_received != TOTALBOARDS)
-  {
-    //Print using uart "Communication Fault detected"
-    //Reverse Communication Direction of Base
-    readReg(0, BQ79616_CONTROL1, &read_reg, 1, 200, FRMWRT_SGL_R);
-    writeReg(0, BQ79616_CONTROL1, read_reg | (1 << 7), 1, FRMWRT_SGL_W);
+	//Communication error
+	if(msg_received != TOTALBOARDS)
+	{
+		//Print using uart "Communication Fault detected"
+		//Reverse Communication Direction of Base
+		readReg(0, BQ79616_CONTROL1, &read_reg, 1, 200, FRMWRT_SGL_R);
+		writeReg(0, BQ79616_CONTROL1, read_reg | (1 << 7), 1, FRMWRT_SGL_W);
 
-    //Revese Communication Direction for the reset of chain
-    for(int i = 0; i < TOTALBOARDS; i++)
-    {
-      readReg(i, BQ79616_CONTROL1, &read_reg, 1, 200, FRMWRT_SGL_R);
-      writeReg(i, BQ79616_CONTROL1, (1 << 7), 1, FRMWRT_SGL_W);
-    }
-  }
-  else
-  {
-    //Print using uart "NO commuincation fault"
-	 comm_x = 0;
-  }
+		//Revese Communication Direction for the reset of chain
+		for(int i = 0; i < TOTALBOARDS; i++)
+		{
+			readReg(i, BQ79616_CONTROL1, &read_reg, 1, 200, FRMWRT_SGL_R);
+			writeReg(i, BQ79616_CONTROL1, (1 << 7), 1, FRMWRT_SGL_W);
+		}
+	}
+	else
+	{
+		//Print using uart "NO commuincation fault"
+		comm_x = 0;
+	}
 
-  //repeat test again after reversing direction
-  if(readReg(TOTALBOARDS - msg_received, BQ79616_CONTROL1, &read_reg, 1, 200, FRMWRT_SGL_R) != 0)
-  {
-    //print via uart read_reg
-	  comm_x = 1;
-  }
-  else
-  {
-    //print via uart "Coundn't reach board"
-	  comm_x = 200;
-  }
+	//repeat test again after reversing direction
+	if(readReg(TOTALBOARDS - msg_received, BQ79616_CONTROL1, &read_reg, 1, 200, FRMWRT_SGL_R) != 0)
+	{
+		//print via uart read_reg
+		comm_x = 1;
+	}
+	else
+	{
+		//print via uart "Coundn't reach board"
+		comm_x = 200;
+	}
 
 }
 uint8_t Buffer[5];
+
+
+#include <stdint.h>
+#include <stdio.h>
+
+// Example register addresses (replace with actual addresses from datasheet)
+#define CONTROL2        BQ79616_CONTROL2
+#define TSREF_EN_BIT    0x01
+
+#define GPIO_CONF1      BQ79616_GPIO_CONF1
+#define GPIO1_ADC_BIT   0x12
+#define ADC_CTRL1       BQ79616_ADC_CTRL1
+#define MAIN_GO_BIT     0x01
+
+#define GPIO1_HI_REG    GPIO1_HI
+#define GPIO1_LO_REG    GPIO1_LO
+
+#define VLSB_GPIO       152.59  // 1 LSB in μV (replace with datasheet value)
+#define R1              10000 // Pull-up resistor for thermistor in ohms
+
+#define DIETEMP1_HI_REG DIETEMP1_HI  // High byte register of Die Temperature
+#define DIETEMP1_LO_REG DIETEMP1_LO  // Low byte register of Die Temperature
+#define VLSB_MAIN_DIETEMP1 0.0078125 // LSB value in °C
+
+int16_t raw_value;
+uint8_t hi, lo;
+
+float gpio1_voltage=5;
+float gpio8_voltage=5.254654;
+float tsref_voltage = 0; // Example: 5V in μV
+float rntc=2.56;
+
+extern volatile uint32_t ms_counter ;
+
+
+
+//// External functions to access the device
+//extern void writeReg(uint8_t bID, uint16_t wAddr, uint8_t data, uint8_t len, uint8_t writeType);
+//extern uint8_t readReg(uint8_t bID, uint16_t wAddr, uint8_t* pData, uint8_t len, uint32_t timeout, uint8_t readType);
+
+// Function to enable TSREF
+void enableTSREF(void) {
+	writeReg(1, BQ79616_CONTROL2, 0x01, 1,FRMWRT_SGL_W);
+	writeReg(2, BQ79616_CONTROL2, 0x01, 1,FRMWRT_SGL_W);
+	HAL_Delay(10); // Wait 1.35ms for TSREF to stabilize
+}
+
+// Function to configure GPIO1 as ADC input
+void configureGPIO8_ADC(void) {
+	writeReg(1, BQ79616_GPIO_CONF4, 0x10, 1, FRMWRT_SGL_W);
+	writeReg(2, BQ79616_GPIO_CONF4, 0x10, 1, FRMWRT_SGL_W);
+}
+
+//// Function to start the Main ADC
+//void startMainADC(void) {
+//    writeReg(0, ADC_CTRL1, MAIN_GO_BIT, 1, FRMWRT_ALL_W);
+//}
+
+// Function to read GPIO1 voltage in μV
+float readGPIO1Voltage(void) {
+	uint8_t hi, lo;
+	int16_t raw_value;
+	float voltage_uV;
+
+	uint8_t buffer[1];
+
+	hi = readReg(1, GPIO1_HI_REG, buffer, 1, 0, FRMWRT_SGL_R);
+	lo = readReg(1, GPIO1_LO_REG, buffer, 1, 0, FRMWRT_SGL_R);
+
+	raw_value = (int16_t)((hi << 8) | lo);
+	voltage_uV = raw_value * VLSB_GPIO;
+
+	return voltage_uV;
+}
+
+// Function to read TSERF voltage in μV
+float readTSREFVoltage(void) {
+
+
+	float voltage_uV;
+
+	uint8_t buffer[1];
+
+	hi = readReg(1, TSREF_HI, buffer, 1, 0, FRMWRT_SGL_R);
+	lo = readReg(1, TSREF_LO, buffer, 1, 0, FRMWRT_SGL_R);
+
+	raw_value = (int16_t)((hi << 8) | lo);
+	voltage_uV = raw_value * VLSB_GPIO;
+
+	return voltage_uV;
+}
+
+
+
+float readGPIO8Voltage(uint8_t BID) {
+
+	float voltage_uV;
+
+	uint16_t buffer[2];
+
+	readReg(BID, GPIO8_HI, &buffer[1], 1, 0, FRMWRT_SGL_R);
+	readReg(BID, GPIO8_LO, &buffer[2], 1, 0, FRMWRT_SGL_R);
+
+	//raw_value = (int16_t)((hi << 8) | lo);
+	raw_value =((buffer[1] << 8) | buffer[2]);
+	voltage_uV = (int16_t)raw_value *VLSB_GPIO/1000000;
+	return voltage_uV;
+}
+
+
+
+
+
+
 /* USER CODE END 0 */
 
 /**
@@ -231,62 +349,78 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
- //  test1();
-  // HAL_UART_Receive_IT(&huart1, Buffer, 5);
-  /* Start first async receive (interrupt) for 1 byte */
-//   if (HAL_UART_Receive_IT(&huart1, rx_byte, 5) != HAL_OK)
-//   {
-//     /* Reception Error */
-//     Error_Handler();
-//   }
-//   test1();
-//   test1();
-//   test1();
-  // Wake79616();
-
-   Wake79600();
-   readReg(0, 0x2001, &received_data, 1, 0, FRMWRT_SGL_R);
-   Bridge_AutoAddress();
-
-//   writeReg(0, BQ79616_CONTROL1, 0x21, 1, FRMWRT_ALL_W);
-//  readReg(0, Bridge_SLP_TIMEOUT, &received_data, 1, 100, FRMWRT_SGL_R);
+  HAL_TIM_Base_Start_IT(&htim2);
 
 
-   //writeReg(0, BQ79616_CONTROL1, received_data | (1 << 5), 1,  FRMWRT_SGL_W);
- //AutoAddress();
-   // Bridge_AutoAddress();
-//   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-//   HAL_Delay(1000);
-//   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-//
-//      HAL_Delay(100);
-//
-//     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-//     HAL_Delay(1000);
+	Wake79600();
 
-   //test1();
-  	 // test4();
-   writeReg(0, BQ79616_ADC_CTRL1, 0x06, 1, FRMWRT_STK_W);
+	Bridge_AutoAddress();
+
+	//   writeReg(0, BQ79616_CONTROL1, 0x21, 1, FRMWRT_ALL_W);
+	//  readReg(0, Bridge_SLP_TIMEOUT, &received_data, 1, 100, FRMWRT_SGL_R);
+
+	//SYNCRHONIZE THE DLL WITH A THROW-AWAY READ
+	readReg(0, OTP_ECC_DATAIN1, &received_data1, 1, 0, FRMWRT_STK_R);
+	readReg(0, OTP_ECC_DATAIN2, &received_data1, 1, 0, FRMWRT_STK_R);
+	readReg(0, OTP_ECC_DATAIN3, &received_data1, 1, 0, FRMWRT_STK_R);
+	readReg(0, OTP_ECC_DATAIN4, &received_data1, 1, 0, FRMWRT_STK_R);
+	readReg(0, OTP_ECC_DATAIN5, &received_data1, 1, 0, FRMWRT_STK_R);
+	readReg(0, OTP_ECC_DATAIN6, &received_data1, 1, 0, FRMWRT_STK_R);
+	readReg(0, OTP_ECC_DATAIN7, &received_data1, 1, 0, FRMWRT_STK_R);
+	readReg(0, OTP_ECC_DATAIN8, &received_data1, 1, 0, FRMWRT_STK_R);
+
+
+
+    HAL_Delay(10);
+	enableTSREF();
+	configureGPIO8_ADC();
+
+//    configure_OTUT(1, 0);
+//    configure_OTUT(2, 0);
+
+
+	writeReg(0, BQ79616_ADC_CTRL1, 0x06, 1, FRMWRT_STK_W);
+	HAL_Delay(10);
+	writeReg(0, BQ79616_ADC_CTRL1, 0x06, 1, FRMWRT_STK_W);
+	HAL_Delay(10);
+	readReg(1, BQ79616_ADC_CTRL1, &received_data1, 1, 0, FRMWRT_SGL_R);
+
+	readReg(2, BQ79616_ADC_CTRL1, &received_data2, 1, 0, FRMWRT_SGL_R);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-	  final_value = test2();
-	  HAL_Delay(30);
-	   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-	   HAL_Delay(1000);
-	   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-	   HAL_Delay(1000);
+	while (1)
+	{
+		HAL_Delay(10);
+		final_value = test2();
+		//HAL_Delay(30);
 
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+		HAL_Delay(200);
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+		HAL_Delay(200);
+		//ReadDieTempStack();
+
+//		for(int i = 1; i <=8; i++)
+//		{
+//			gpio8_voltage = readGPIOVoltage(i);
+//			HAL_Delay(100);
+//		}
+		gpio8_voltage = readGPIO8Voltage(1);
+		HAL_Delay(1000);
+		gpio8_voltage = readGPIO8Voltage(2);
+
+		///rntc = gpioVoltageToRntc(gpio1_voltage, tsref_voltage);
+		//readReg(1, ADC_STAT1, &received_data, 1, 0, FRMWRT_SGL_R);
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+	}
   /* USER CODE END 3 */
 }
 
@@ -327,6 +461,51 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 71;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 999;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
 }
 
 /**
@@ -436,11 +615,11 @@ static void MX_GPIO_Init(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1)
+	{
+	}
   /* USER CODE END Error_Handler_Debug */
 }
 
@@ -455,7 +634,7 @@ void Error_Handler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
+	/* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
 }

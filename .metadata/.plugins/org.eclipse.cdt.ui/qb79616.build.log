@@ -1,10 +1,10 @@
-14:37:47 **** Incremental Build of configuration Debug for project qb79616 ****
+20:20:25 **** Incremental Build of configuration Debug for project qb79616 ****
 make -j4 all 
 arm-none-eabi-size  qb79616.elf 
    text	   data	    bss	    dec	    hex	filename
-  15708	     12	   2196	  17916	   45fc	qb79616.elf
+  18000	     16	   2280	  20296	   4f48	qb79616.elf
 Finished building: default.size.stdout
  
 
-14:37:47 Build Finished. 0 errors, 0 warnings. (took 319ms)
+20:20:25 Build Finished. 0 errors, 0 warnings. (took 319ms)
 
